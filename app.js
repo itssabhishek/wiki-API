@@ -25,25 +25,64 @@ const articleSchema = {
 
 const Article = mongoose.model('Article', articleSchema);
 
-app.get('/articles', function (req, res) {
-  Article.find(function (err, foundArticles) {
-    if (!err) {
-      res.send(foundArticles);
-    } else {
-      res.send(err);
-    }
-  });
-});
+/*********************************Request Targeting All the Articles **********************************/
 
-app.post('/articles', function (req, res) {
-  const newArticle = new Article({
-    title: req.body.title,
-    content: req.body.content,
+app
+  .route('/articles')
+  .get(function (req, res) {
+    Article.find(function (err, foundArticles) {
+      if (!err) {
+        res.send(foundArticles);
+      } else {
+        res.send(err);
+      }
+    });
+  })
+  .post(function (req, res) {
+    const newArticle = new Article({
+      title: req.body.title,
+      content: req.body.content,
+    });
+    newArticle.save(function (err, saved) {
+      !err ? res.send('Saved Successfully') : res.send(err);
+    });
+  })
+  .delete(function (req, res) {
+    Article.deleteMany({}, function (err) {
+      err ? res.send(err) : res.send('Successfully deleted.');
+    });
   });
-  newArticle.save(function (err, saved) {
-    !err ? res.send('Saved Successfully') : res.send(err);
+
+/*********************************Request Targeting Specific Articles **********************************/
+
+app
+  .route('/articles/:articleTitle')
+
+  .get(function (req, res) {
+    Article.findOne({ title: req.params.articleTitle }, function (found, err) {
+      !err ? res.send(found) : res.send(err);
+    });
+  })
+
+  .put(function (req, res) {
+    Article.updateOne(
+      { title: req.params.articleTitle },
+      { title: req.body.title, content: req.body.content },
+      function (err) {
+        !err ? res.send('Updated successfully') : res.send(err);
+      }
+    );
+  })
+
+  .patch(function (req, res) {
+    Article.updateOne(
+      { title: req.params.articleTitle },
+      { $set: req.body },
+      function (err) {
+        !err ? res.send('Patched successfully') : res.send(err);
+      }
+    );
   });
-});
 
 app.listen(3000, function () {
   console.log('Server started on port 3000');
